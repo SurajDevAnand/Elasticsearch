@@ -2,10 +2,24 @@
 import json
 import time
 import os
+import urllib3
+urllib3.disable_warnings()
 
 PLUGIN_VERSION=1
 HEARTBEAT=True
-METRICS_UNITS={}
+METRICS_UNITS = { 'JVM garbage collector old generation time':'ms',
+                  'Average JVM memory usage in garbage collector(%)' : '%',
+                  'CPU used (%)':'%',
+                  'OS memory used(%)':'%', 
+                  'OS memory free(%)':'%',
+                  'JVM heap memory used (%)':'%',
+                  'Time spent on fetches':'ms',
+                  "Time spent on queries":'ms',
+                  "Total time on GET requests where the document was missing":'ms',
+                  "JVM heap memory committed":'KB'
+
+                }
+
 counterFilePath="counter.json"
 
 #Metrics
@@ -103,7 +117,14 @@ class esk:
         self.nodename=args.nodename
         self.username=args.username
         self.password=args.password
-        self.url="http://"+self.hostname+":"+str(self.port)
+        self.ssl_option=args.ssl_option
+        self.cafile=args.cafile
+
+        if self.ssl_option.lower()=="true":
+            self.url="https://"+self.hostname+":"+str(self.port)
+        elif self.ssl_option.lower()=="false":
+            self.url="http://"+self.hostname+":"+str(self.port)
+
 
         self.dictCounterValues = {}
         self.loadCounterValues()
@@ -132,7 +153,7 @@ class esk:
             from requests.auth import HTTPBasicAuth
 
             url=self.url+endpoint
-            r=requests.get(url, timeout=5, auth = HTTPBasicAuth(self.username,  self.password))
+            r=requests.get(url, timeout=5, auth = HTTPBasicAuth(self.username,  self.password), verify=self.cafile)
             r.raise_for_status()
         
         except requests.exceptions.HTTPError as herror:
@@ -299,6 +320,8 @@ if __name__=="__main__":
     nodename="test-node"
     username=None
     password=None
+    ssl_option="False"
+    cafile=None
 
 
 
@@ -309,6 +332,9 @@ if __name__=="__main__":
     parser.add_argument('--nodename', help='Node name to be monitored', nargs='?', default=nodename)
     parser.add_argument('--username', help='Username of the Elasticsearch', nargs='?', default=username)
     parser.add_argument('--password', help='Password of the Elasticsearch', nargs='?', default=password)
+    parser.add_argument('--ssl_option', help='Option for Elasticsearch ssl', nargs='?', default=ssl_option)
+    parser.add_argument('--cafile', help='cafile for the Elasticsearch', nargs='?', default=cafile)
+
     args=parser.parse_args()
     obj=esk(args)
 
