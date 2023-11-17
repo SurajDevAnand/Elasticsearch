@@ -153,7 +153,7 @@ class esk:
             from requests.auth import HTTPBasicAuth
 
             url=self.url+endpoint
-            r=requests.get(url, timeout=5, auth = HTTPBasicAuth(self.username,  self.password), verify=self.cafile)
+            r=requests.get(url, timeout=5, auth = HTTPBasicAuth(self.username,  self.password), verify=False)
             r.raise_for_status()
         
         except requests.exceptions.HTTPError as herror:
